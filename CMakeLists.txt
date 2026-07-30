@@ -3,15 +3,19 @@ cmake_minimum_required(VERSION 3.20)
 
 project(ChatRoom)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_executable(
+    server
 
-add_subdirectory(common)
+    server/Server.cpp
+    server/Main.cpp
+)
 
-add_subdirectory(server)
+add_executable(
+    client
 
-add_subdirectory(client)
+    client/Main.cpp
+)
