@@ -10,10 +10,15 @@ class Server
     public:
         Server(const std::string& ip, int port);
 
-        void Start(Server server);
+        void Start();
+
+        void Accept();
+
+        void Recv();
 
     private:
         int listenfd_;
+        int clientfd_;
         int port_;
         sockaddr_in server_addr_;
         std::string ip_;
