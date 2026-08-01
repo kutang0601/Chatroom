@@ -17,5 +17,6 @@ add_executable(
 add_executable(
     client
 
+    client/Client.cpp
     client/Main.cpp
 )

@@ -9,7 +9,7 @@
 
 Server::Server(const std::string &ip, int port) {
   port_ = port;
-  listenfd_ = 0;
+  listenfd_ = -1;
   memset(&server_addr_, 0, sizeof(server_addr_));
   ip_ = ip;
 }
@@ -51,6 +51,7 @@ void Server::Start()
 
     Accept();
     
+    Recv();
 }
 
 void Server::Accept()
