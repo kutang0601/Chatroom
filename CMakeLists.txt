@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(
     server
 
+    server/ClientConnection.cpp
     server/Server.cpp
     server/Main.cpp
 )
@@ -20,3 +21,4 @@ add_executable(
     client/Client.cpp
     client/Main.cpp
 )
+

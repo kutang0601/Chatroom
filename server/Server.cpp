@@ -1,11 +1,14 @@
 #include "Server.h"
+#include "ClientConnection.h"
 
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdexcept>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 Server::Server(const std::string &ip, int port) {
   port_ = port;
@@ -49,9 +52,11 @@ void Server::Start()
         throw std::runtime_error("listen fail!");
     }
 
-    Accept();
-    
-    Recv();
+    while(1)
+    {
+        Accept();
+    }
+
 }
 
 void Server::Accept()
@@ -67,21 +72,32 @@ void Server::Accept()
         throw std::runtime_error("accept fail");
     }
 
-    clientfd_ = clientfd;
-
     std::cout << "client accept success!" << std::endl;
-}
 
-void Server::Recv()
-{
-    char buf[1024];
+    ThreadParameter* parameter = new ThreadParameter;
+    parameter->clientfd = clientfd;
 
-    memset(buf, 0, sizeof(buf));
+    pthread_t tid = 0;
 
-    if ((recv(clientfd_, buf, sizeof(buf), 0) == -1))
+    int thread_ret = pthread_create(&tid, nullptr, Entrance, parameter);
+
+    if (thread_ret != 0)
     {
-        throw std::runtime_error("recv fail");
+        throw std::runtime_error("pthread create fail");
     }
 
-    std::cout << buf << std::endl;
+    pthread_detach(tid);
+}
+
+void* Server::Entrance(void *arg)
+{
+    ThreadParameter* paremeter = (ThreadParameter*)arg;
+
+    ClientConnection client(paremeter->clientfd);
+
+    delete paremeter;
+
+    client.Recv();
+
+    return nullptr;
 }
