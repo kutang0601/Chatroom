@@ -15,7 +15,7 @@ class Server
     public:
         Server(const std::string& ip, int port);
 
-        static void* Entrance(void* arg);
+        static void* ServerEntrance(void* arg);
 
         void Start();
 

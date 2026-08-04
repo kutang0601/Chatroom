@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
+#include <ostream>
 #include <pthread.h>
 #include <stdexcept>
 #include <sys/socket.h>
@@ -79,7 +80,7 @@ void Server::Accept()
 
     pthread_t tid = 0;
 
-    int thread_ret = pthread_create(&tid, nullptr, Entrance, parameter);
+    int thread_ret = pthread_create(&tid, nullptr, ServerEntrance, parameter);
 
     if (thread_ret != 0)
     {
@@ -89,7 +90,7 @@ void Server::Accept()
     pthread_detach(tid);
 }
 
-void* Server::Entrance(void *arg)
+void* Server::ServerEntrance(void *arg)
 {
     ThreadParameter* paremeter = (ThreadParameter*)arg;
 
@@ -97,7 +98,27 @@ void* Server::Entrance(void *arg)
 
     delete paremeter;
 
-    client.Recv();
+    while (1)
+    {
+        std::string message_send = client.Recv();
 
+        if (message_send == "客户端退出") 
+        {
+            std::cout << message_send << std::endl;
+
+            return nullptr;
+        }
+        else if(message_send == "recv fail")
+        {
+            std::cout << message_send << std::endl;
+
+            return nullptr;
+        }
+            
+        std::getline(std::cin, message_send);
+
+        client.Send(message_send);
+    }
+    
     return nullptr;
 }

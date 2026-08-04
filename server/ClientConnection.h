@@ -10,7 +10,7 @@ class ClientConnection
 
         ~ClientConnection();
 
-        void Recv();
+        std::string Recv();
 
         void Send(const std::string& message);
 

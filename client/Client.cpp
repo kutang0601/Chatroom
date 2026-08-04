@@ -1,11 +1,14 @@
 #include "Client.h"
+
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdexcept>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 Client::Client(const std::string& ip, int port)
 {
@@ -13,6 +16,10 @@ Client::Client(const std::string& ip, int port)
     port_ = port;
     ip_ = ip;
     memset(&server_addr_, 0, sizeof(server_addr_));
+}
+Client::~Client()
+{
+    close(socketfd_);
 }
 
 void Client::Connect()
@@ -34,7 +41,7 @@ void Client::Connect()
     server_addr.sin_port = htons(port_);
     int pton_ret = inet_pton(AF_INET, ip_.c_str(), &server_addr.sin_addr);
 
-    if (pton_ret == -1)
+    if (pton_ret <= 0)
     {
         throw std::runtime_error("pton fail!");
     }
@@ -59,4 +66,52 @@ void Client::Send(const std::string& message)
     {
         throw std::runtime_error("send fail!");
     }
+}
+
+void Client::Recv()
+{
+    while (1) 
+    {
+        char buf[1024];
+
+        memset(buf, 0, sizeof(buf));
+
+        int recv_ret = recv(socketfd_, buf, sizeof(buf), 0);
+        
+        if (recv_ret > 0)
+        {
+            std::cout << buf << std::endl;
+        }
+        else if (recv_ret == 0) 
+        {
+            std::cout << "服务器终止!" << std::endl;
+            break;
+        }
+        else 
+        {
+            std::cout << "recv fail!" << std::endl;
+            break;
+        }
+    }
+}
+
+void Client::RecvThreadStart()
+{
+    int pthread_ret = pthread_create(&tid_, nullptr, RecvEntrance, this);   
+
+    if (pthread_ret != 0)
+    {
+        throw std::runtime_error("pthread create fail");
+    }
+
+    pthread_detach(tid_);
+}
+
+void* Client::RecvEntrance(void* arg)
+{
+    Client* client = (Client*)arg;
+
+    client->Recv();
+
+    return nullptr;
 }

@@ -1,4 +1,5 @@
 #include "Client.h"
+
 #include <iostream>
 #include <string>
 
@@ -10,9 +11,19 @@ int main()
 
         client.Connect();
 
-        std::string message = "hello world";
+        client.RecvThreadStart();
 
-        client.Send(message);
+        while (1)
+        {
+            std::string message;
+            
+            std::getline(std::cin, message);
+
+            if (!message.compare("exit"))
+                break;
+
+            client.Send(message);
+        }
 
     } 
     catch (const std::exception& e) 
