@@ -4,10 +4,12 @@
 #include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
+#include "ClientManager.h"
 
 struct ThreadParameter
 {
-    int clientfd;
+    ClientManager* manager;
+    ClientConnection* client;
 };
 
 class Server
@@ -24,8 +26,10 @@ class Server
     private:
         int listenfd_;
         int port_;
+        int next_id_ = 1;
         sockaddr_in server_addr_;
         std::string ip_;
+        ClientManager manager_;
 };
 
 #endif

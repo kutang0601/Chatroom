@@ -7,14 +7,23 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-ClientConnection::ClientConnection(int fd)
+ClientConnection::ClientConnection(int fd, int id)
 {
     fd_ = fd;
+    id_ = id;
 }
 
 ClientConnection::~ClientConnection()
 {
-    close(fd_);
+    if (fd_ != -1)
+    {
+        close(fd_);
+    }
+}
+
+int ClientConnection::GetId()
+{
+    return id_;
 }
 
 std::string ClientConnection::Recv()
@@ -28,8 +37,6 @@ std::string ClientConnection::Recv()
 
     if (recv_ret > 0)
     {
-        std::cout << message << std::endl;
-        
         return message;
     }
     else if (recv_ret == 0)

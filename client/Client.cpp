@@ -19,7 +19,10 @@ Client::Client(const std::string& ip, int port)
 }
 Client::~Client()
 {
-    close(socketfd_);
+    if (socketfd_ != -1)
+    {
+        close(socketfd_);
+    }
 }
 
 void Client::Connect()

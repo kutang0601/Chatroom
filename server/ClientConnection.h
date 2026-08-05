@@ -6,9 +6,11 @@
 class ClientConnection
 {
     public:
-        ClientConnection(int fd);
+        ClientConnection(int fd, int id);
 
         ~ClientConnection();
+
+        int GetId();
 
         std::string Recv();
 
@@ -16,6 +18,7 @@ class ClientConnection
 
     private:
         int fd_;
+        int id_;
 };
 
 #endif

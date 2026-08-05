@@ -11,6 +11,7 @@ add_executable(
     server
 
     server/ClientConnection.cpp
+    server/ClientManager.cpp
     server/Server.cpp
     server/Main.cpp
 )

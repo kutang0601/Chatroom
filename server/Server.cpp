@@ -1,5 +1,6 @@
 #include "Server.h"
 #include "ClientConnection.h"
+#include "ClientManager.h"
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -10,6 +11,7 @@
 #include <stdexcept>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 Server::Server(const std::string &ip, int port) {
   port_ = port;
@@ -73,17 +75,30 @@ void Server::Accept()
         throw std::runtime_error("accept fail");
     }
 
-    std::cout << "client accept success!" << std::endl;
+    int id = next_id_++;
+
+    ClientConnection* client = new ClientConnection(clientfd, id);
+
+    if (!manager_.Add(client))
+    {
+        delete client;
+
+        throw std::runtime_error("clients key reapeat!");
+    }
 
     ThreadParameter* parameter = new ThreadParameter;
-    parameter->clientfd = clientfd;
+    
+    parameter->client = client;
+    parameter->manager = &manager_;
 
     pthread_t tid = 0;
 
     int thread_ret = pthread_create(&tid, nullptr, ServerEntrance, parameter);
 
     if (thread_ret != 0)
-    {
+    {   
+        manager_.Remove(client);
+
         throw std::runtime_error("pthread create fail");
     }
 
@@ -94,17 +109,20 @@ void* Server::ServerEntrance(void *arg)
 {
     ThreadParameter* paremeter = (ThreadParameter*)arg;
 
-    ClientConnection client(paremeter->clientfd);
+    ClientConnection* client = paremeter->client;
+    ClientManager* manager = paremeter->manager;
 
     delete paremeter;
 
     while (1)
     {
-        std::string message_send = client.Recv();
+        std::string message_send = client->Recv();
 
         if (message_send == "客户端退出") 
         {
             std::cout << message_send << std::endl;
+
+            manager->Remove(client);
 
             return nullptr;
         }
@@ -112,12 +130,12 @@ void* Server::ServerEntrance(void *arg)
         {
             std::cout << message_send << std::endl;
 
+            manager->Remove(client);
+
             return nullptr;
         }
             
-        std::getline(std::cin, message_send);
-
-        client.Send(message_send);
+        manager->Broadcast(client, message_send);
     }
     
     return nullptr;
