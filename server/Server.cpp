@@ -1,12 +1,12 @@
 #include "Server.h"
 #include "ClientConnection.h"
 #include "ClientManager.h"
+#include "RecvResult.h"
 
 #include <arpa/inet.h>
 #include <cstring>
-#include <iostream>
+#include <memory>
 #include <netinet/in.h>
-#include <ostream>
 #include <pthread.h>
 #include <stdexcept>
 #include <sys/socket.h>
@@ -77,12 +77,10 @@ void Server::Accept()
 
     int id = next_id_++;
 
-    ClientConnection* client = new ClientConnection(clientfd, id);
+    std::shared_ptr<ClientConnection> client =  std::make_shared<ClientConnection>(clientfd, id);
 
     if (!manager_.Add(client))
     {
-        delete client;
-
         throw std::runtime_error("clients key reapeat!");
     }
 
@@ -97,7 +95,7 @@ void Server::Accept()
 
     if (thread_ret != 0)
     {   
-        manager_.Remove(client);
+        manager_.Remove(client->GetId());
 
         throw std::runtime_error("pthread create fail");
     }
@@ -109,33 +107,44 @@ void* Server::ServerEntrance(void *arg)
 {
     ThreadParameter* paremeter = (ThreadParameter*)arg;
 
-    ClientConnection* client = paremeter->client;
+    std::shared_ptr<ClientConnection> client = paremeter->client;
     ClientManager* manager = paremeter->manager;
 
     delete paremeter;
 
     while (1)
     {
-        std::string message_send = client->Recv();
+        struct RecvResult* result = client->Recv();
 
-        if (message_send == "客户端退出") 
+        switch (result->status) 
         {
-            std::cout << message_send << std::endl;
+            case RecvStatus::RECV_SUCCESS:
+            {    
+                manager->Broadcast(client, result->message);
 
-            manager->Remove(client);
-
-            return nullptr;
-        }
-        else if(message_send == "recv fail")
-        {
-            std::cout << message_send << std::endl;
-
-            manager->Remove(client);
-
-            return nullptr;
-        }
+                delete result;
+            }
+                break;
             
-        manager->Broadcast(client, message_send);
+            case RecvStatus::RECV_ERROR:
+            {
+                manager->Remove(client->GetId());
+
+                delete result;
+
+                return nullptr;
+            }
+            break;
+
+            case RecvStatus::CLIENT_EXIT:
+            {
+                manager->Remove(client->GetId());
+
+                delete result;
+
+                return nullptr;
+            }
+        }
     }
     
     return nullptr;

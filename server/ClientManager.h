@@ -2,7 +2,10 @@
 #define CLIENTMANAGER_H
 
 #include "ClientConnection.h"
+
 #include <map>
+#include <memory>
+#include <pthread.h>
 #include <string>
 
 class ClientManager
@@ -12,14 +15,15 @@ class ClientManager
 
         ~ClientManager();
 
-        bool Add(ClientConnection* client);
+        bool Add(std::shared_ptr<ClientConnection> client);
 
-        bool Remove(ClientConnection* client);
+        bool Remove(int id);
 
-        void Broadcast(ClientConnection* sender, const std::string& message);
+        void Broadcast(std::shared_ptr<ClientConnection> sender, const std::string& message);
 
     private:
-        std::map<int, ClientConnection*> clients_;
+        std::map<int, std::shared_ptr<ClientConnection>> clients_;
+        pthread_mutex_t mutex_;
 };
 
 #endif

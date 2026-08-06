@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 add_executable(
     server
 
@@ -22,4 +23,21 @@ add_executable(
     client/Client.cpp
     client/Main.cpp
 )
+
+target_include_directories(
+    server
+
+    PRIVATE
+
+    ${CMAKE_SOURCE_DIR}/common
+)
+
+target_include_directories(
+    client
+
+    PRIVATE
+
+    ${CMAKE_SOURCE_DIR}/common
+)
+
 

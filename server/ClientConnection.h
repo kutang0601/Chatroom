@@ -1,6 +1,8 @@
 #ifndef CLIENTCONNECTION_H
 #define CLIENTCONNECTION_H
 
+#include "RecvResult.h"
+
 #include <string>
 
 class ClientConnection
@@ -12,7 +14,7 @@ class ClientConnection
 
         int GetId();
 
-        std::string Recv();
+        struct RecvResult* Recv();
 
         void Send(const std::string& message);
 

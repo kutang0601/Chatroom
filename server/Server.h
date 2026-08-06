@@ -1,15 +1,18 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "ClientConnection.h"
+#include "ClientManager.h"
+
+#include <memory>
 #include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
-#include "ClientManager.h"
 
 struct ThreadParameter
 {
     ClientManager* manager;
-    ClientConnection* client;
+    std::shared_ptr<ClientConnection> client;
 };
 
 class Server

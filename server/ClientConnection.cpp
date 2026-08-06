@@ -1,8 +1,9 @@
 #include "ClientConnection.h"
+#include "RecvResult.h"
 
 #include <bits/types/cookie_io_functions_t.h>
 #include <cstring>
-#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -26,29 +27,32 @@ int ClientConnection::GetId()
     return id_;
 }
 
-std::string ClientConnection::Recv()
+struct RecvResult* ClientConnection::Recv()
 {
     char message[1024];
     memset(message, 0, sizeof(message)); 
 
     int recv_ret = recv(fd_, message, sizeof(message), 0);
 
-    std::string ret; 
+    struct RecvResult* result = new struct RecvResult;
 
-    if (recv_ret > 0)
+    if (recv_ret < 0)
     {
-        return message;
+        result->message = "";
+        result->status = RecvStatus::RECV_ERROR;
     }
-    else if (recv_ret == 0)
+    else if (recv_ret == 0) 
     {
-        ret = "客户端退出";
-        return ret;
+        result->message = "";
+        result->status = RecvStatus::CLIENT_EXIT;
     }
-    else
+    else 
     {
-        ret = "recv fail";
-        return ret;
+        result->message = message;
+        result->status = RecvStatus::RECV_SUCCESS;
     }
+
+    return result;
 }
 
 void ClientConnection::Send(const std::string& message)
