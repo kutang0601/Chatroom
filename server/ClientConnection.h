@@ -16,7 +16,9 @@ class ClientConnection
 
         struct RecvResult* Recv();
 
-        void Send(const std::string& message);
+        bool Send(const std::string& message);
+
+        void Close();
 
     private:
         int fd_;

@@ -13,18 +13,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-Server::Server(const std::string &ip, int port) {
-  port_ = port;
-  listenfd_ = -1;
-  memset(&server_addr_, 0, sizeof(server_addr_));
-  ip_ = ip;
+Server::Server(const std::string &ip, int port) 
+{
+    port_ = port;
+    listenfd_ = -1;
+    memset(&server_addr_, 0, sizeof(server_addr_));
+    ip_ = ip;
+    running_ = true;
 }
 
 void Server::Start()
 {
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    if(listenfd == -1)
+    if (listenfd == -1)
     {
         throw std::runtime_error("socket create fail!");
     }
@@ -43,7 +45,7 @@ void Server::Start()
         throw std::runtime_error("pton fail");
     }
 
-    if(bind(listenfd_, (sockaddr*)& server_addr_, sizeof(server_addr_)) == -1)
+    if (bind(listenfd_, (sockaddr*)& server_addr_, sizeof(server_addr_)) == -1)
     {
         throw std::runtime_error("bind fail!");
     }
@@ -55,7 +57,7 @@ void Server::Start()
         throw std::runtime_error("listen fail!");
     }
 
-    while(1)
+    while (running_)
     {
         Accept();
     }
@@ -72,6 +74,9 @@ void Server::Accept()
 
     if (clientfd == -1)
     {
+        if (!running_)
+            return;
+
         throw std::runtime_error("accept fail");
     }
 
@@ -81,6 +86,8 @@ void Server::Accept()
 
     if (!manager_.Add(client))
     {
+        client->Close();
+
         throw std::runtime_error("clients key reapeat!");
     }
 
@@ -103,7 +110,7 @@ void Server::Accept()
     pthread_detach(tid);
 }
 
-void* Server::ServerEntrance(void *arg)
+void* Server::ServerEntrance(void* arg)
 {
     ThreadParameter* paremeter = (ThreadParameter*)arg;
 
@@ -148,4 +155,19 @@ void* Server::ServerEntrance(void *arg)
     }
     
     return nullptr;
+}
+
+void Server::Stop()
+{
+    running_ = false;
+
+    if (listenfd_ != -1)
+    {
+        shutdown(listenfd_, SHUT_RDWR);
+
+        close(listenfd_);
+        listenfd_ = -1;
+    }
+
+    manager_.NotifyAll("server close!");
 }

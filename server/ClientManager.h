@@ -19,6 +19,8 @@ class ClientManager
 
         bool Remove(int id);
 
+        void NotifyAll(const std::string& message);
+
         void Broadcast(std::shared_ptr<ClientConnection> sender, const std::string& message);
 
     private:
